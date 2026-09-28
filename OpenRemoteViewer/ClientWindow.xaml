@@ -1,0 +1,108 @@
+<Window x:Class="OpenRemoteViewer.ClientWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="OpenRemoteViewer — Client" Height="300" Width="430"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize"
+        WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType">
+
+    <Border CornerRadius="16" Background="White" Margin="10"
+            MouseLeftButtonDown="Window_MouseLeftButtonDown">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="30" ShadowDepth="4" Opacity="0.12" Color="Black"/>
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Border Grid.Row="0" Background="#f8f9fc" CornerRadius="16,16,0,0"
+                    BorderBrush="#0F000000" BorderThickness="0,0,0,1" Padding="16,12">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                        <Border Width="24" Height="24" CornerRadius="7" Margin="0,0,10,0">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#1e78ff" Offset="0"/>
+                                    <GradientStop Color="#00c4a0" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <TextBlock Text="⬚" Foreground="White" FontSize="12"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock x:Name="txtClientTitle" Text="OpenRemoteViewer — Client"
+                                   FontSize="13" FontWeight="SemiBold" Foreground="#333"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right"
+                                HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Click="BtnMinimize_Click" Cursor="Hand" Margin="0,0,4,0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bg" Width="22" Height="22" CornerRadius="11"
+                                            Background="#0D000000">
+                                        <TextBlock Text="—" FontSize="10" Foreground="#4D000000"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bg" Property="Background" Value="#19000000"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        <Button x:Name="btnStopClient" Click="BtnStopClient_Click" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bg" Width="22" Height="22" CornerRadius="11"
+                                            Background="#0D000000">
+                                        <TextBlock Text="✕" FontSize="11" Foreground="#4D000000"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bg" Property="Background" Value="#1FFF3C3C"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Content -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="28,15,28,15">
+                <TextBlock x:Name="txtClientStatus" Text="Starting..."
+                           FontSize="16" FontWeight="SemiBold" Foreground="#1a1d26"
+                           HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                <TextBlock x:Name="txtClientInfo" Text=""
+                           Margin="0,8,0,0" HorizontalAlignment="Center"
+                           Foreground="#9aa0ac" FontSize="12" FontFamily="Consolas"
+                           TextWrapping="Wrap" TextAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Status bar -->
+            <Border Grid.Row="2" Background="#f8f9fc" CornerRadius="0,0,16,16"
+                    BorderBrush="#0D000000" BorderThickness="0,1,0,0" Padding="16,10">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse x:Name="statusDot" Width="6" Height="6" Margin="0,0,8,0">
+                        <Ellipse.Fill>
+                            <SolidColorBrush Color="#00c4a0"/>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <TextBlock x:Name="txtStatusBar" FontSize="11" Foreground="#aab0bc"
+                               FontFamily="Consolas" Text=""/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
