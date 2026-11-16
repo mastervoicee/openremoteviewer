@@ -15,7 +15,13 @@ VERSION=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' OpenRemoteViewer/OpenRem
 TAG="v$VERSION"
 EXE="OpenRemoteViewer/bin/Release/net8.0-windows/win-x64/publish/OpenRemoteViewer.exe"
 
+# Always build the bundle from scratch: after an interrupted publish a truncated exe
+# can stay in the output folder and the next publish would treat it as up to date.
+rm -rf "$(dirname "$EXE")"
 (cd OpenRemoteViewer && dotnet publish -c Release)
+
+SIZE=$(stat -c %s "$EXE")
+[ "$SIZE" -gt 50000000 ] || { echo "Built exe is too small ($SIZE bytes) - broken build, not releasing" >&2; exit 1; }
 
 openssl dgst -sha256 -sign "$KEY" -out "$EXE.sig" "$EXE"
 # check the signature with the public half before publishing
