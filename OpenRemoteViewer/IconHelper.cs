@@ -10,7 +10,7 @@ namespace OpenRemoteViewer;
 public static class IconHelper
 {
     private static WinIcon? _trayIcon;
-    private static WinIcon? _trayIconRed;
+    private static WinIcon? _trayIconConnected;
     private static BitmapSource? _wpfIcon;
 
     public static WinIcon GetTrayIcon()
@@ -20,11 +20,11 @@ public static class IconHelper
         return _trayIcon;
     }
 
-    public static WinIcon GetTrayIconRed()
+    public static WinIcon GetTrayIconConnected()
     {
-        if (_trayIconRed != null) return _trayIconRed;
-        _trayIconRed = WinIcon.FromHandle(CreateBitmap(32, true).GetHicon());
-        return _trayIconRed;
+        if (_trayIconConnected != null) return _trayIconConnected;
+        _trayIconConnected = WinIcon.FromHandle(CreateBitmap(32, true).GetHicon());
+        return _trayIconConnected;
     }
 
     public static BitmapSource GetWpfIcon()
@@ -38,7 +38,7 @@ public static class IconHelper
         return _wpfIcon;
     }
 
-    private static Bitmap CreateBitmap(int size, bool red)
+    private static Bitmap CreateBitmap(int size, bool connected)
     {
         var bmp = new Bitmap(size, size);
         using var g = Graphics.FromImage(bmp);
@@ -49,8 +49,9 @@ public static class IconHelper
         float pad = size * 0.04f;
         var rect = new RectangleF(pad, pad, size - pad * 2, size - pad * 2);
 
-        Color c1 = red ? Color.FromArgb(200, 30, 30) : Color.FromArgb(0, 100, 210);
-        Color c2 = red ? Color.FromArgb(255, 60, 60) : Color.FromArgb(0, 160, 255);
+        // Пока админ смотрит экран, значок бирюзовый (второй цвет логотипа), а не тревожно-красный.
+        Color c1 = connected ? Color.FromArgb(18, 184, 154) : Color.FromArgb(0, 100, 210);
+        Color c2 = connected ? Color.FromArgb(63, 214, 185) : Color.FromArgb(0, 160, 255);
 
         using var bgBrush = new LinearGradientBrush(rect, c1, c2, LinearGradientMode.ForwardDiagonal);
         g.FillEllipse(bgBrush, rect);

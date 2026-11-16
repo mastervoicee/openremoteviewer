@@ -319,7 +319,7 @@ public partial class ClientWindow : Window
     private void SetTrayIconConnected(bool connected)
     {
         if (_trayIcon == null) return;
-        _trayIcon.Icon = connected ? IconHelper.GetTrayIconRed() : IconHelper.GetTrayIcon();
+        _trayIcon.Icon = connected ? IconHelper.GetTrayIconConnected() : IconHelper.GetTrayIcon();
         _trayIcon.Text = connected ? Lang.AdminConnectedTray : Lang.TitleClient;
     }
 

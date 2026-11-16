@@ -16,34 +16,30 @@
             <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.15" Color="Black"/>
         </Border.Effect>
         <Grid>
-            <!-- Left accent bar -->
-            <Border CornerRadius="14,0,0,14" Width="5" HorizontalAlignment="Left">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#FF5555" Offset="0"/>
-                        <GradientStop Color="#FF8844" Offset="1"/>
-                    </LinearGradientBrush>
-                </Border.Background>
-            </Border>
-
-            <Grid Margin="20,14,14,14">
+            <Grid Margin="16,14,14,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Icon -->
-                <Border Grid.Column="0" Width="40" Height="40"
-                        CornerRadius="10" VerticalAlignment="Center" Margin="0,0,14,0">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#FF5555" Offset="0"/>
-                            <GradientStop Color="#FF8844" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
-                    <TextBlock x:Name="txtNotifIcon" Text="👁" FontSize="20" Foreground="White"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <!-- Icon: soft mint tile; an eye for "screen is viewed", a glyph for other notices -->
+                <Border Grid.Column="0" Width="40" Height="40" Background="#E3F6F1"
+                        CornerRadius="11" VerticalAlignment="Center" Margin="0,0,14,0">
+                    <Grid>
+                        <Viewbox x:Name="iconEye" Width="22" Height="22">
+                            <Canvas Width="24" Height="24">
+                                <Path Stroke="#0F9F85" StrokeThickness="1.7"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                      Data="M2.5,12 C2.5,12 6,5.5 12,5.5 C18,5.5 21.5,12 21.5,12 C21.5,12 18,18.5 12,18.5 C6,18.5 2.5,12 2.5,12 Z"/>
+                                <Ellipse Canvas.Left="9.2" Canvas.Top="9.2" Width="5.6" Height="5.6"
+                                         Stroke="#0F9F85" StrokeThickness="1.7"/>
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock x:Name="txtNotifIcon" Visibility="Collapsed" FontSize="19"
+                                   FontWeight="SemiBold" Foreground="#0F9F85"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
                 </Border>
 
                 <!-- Text -->
@@ -51,7 +47,7 @@
                     <TextBlock x:Name="txtNotifTitle" Text="Admin connected"
                                FontSize="15" FontWeight="SemiBold" Foreground="#1a1d26"/>
                     <TextBlock x:Name="txtNotifMessage" Text="Your screen is being viewed"
-                               FontSize="11.5" Foreground="#9aa0ac" Margin="0,3,0,0"/>
+                               FontSize="12" Foreground="#8a92a0" Margin="0,3,0,0"/>
                 </StackPanel>
 
                 <!-- Close button -->

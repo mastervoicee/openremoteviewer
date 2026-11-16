@@ -13,7 +13,7 @@ The same exe works in two roles:
 
 The admin only watches. There is no remote mouse or keyboard control. To point at something, the admin can click (a red marker appears on the client's screen) or draw with the right mouse button (the stroke fades out after 3 seconds).
 
-The person at the client computer always knows they are being watched: a notification appears and the tray icon turns red while an admin is connected.
+The person at the client computer always knows they are being watched: a notification pops up for a few seconds when an admin connects, and the tray icon stays teal for as long as the admin is watching.
 
 ## Features
 
