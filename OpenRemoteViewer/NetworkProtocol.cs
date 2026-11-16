@@ -59,10 +59,17 @@ public sealed class SecureConnection : IDisposable
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private bool _disposed;
 
+    /// <summary>Сколько ждём рукопожатие. Молчащее подключение не должно занимать порт вечно.</summary>
+    public static readonly TimeSpan HandshakeTimeout = TimeSpan.FromSeconds(10);
+
+    /// <summary>Сколько ждём, пока уйдёт один пакет. Дольше — соединение мертво.</summary>
+    public static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(15);
+
     private SecureConnection(TcpClient tcp, byte[] key)
     {
         _tcp = tcp;
         _tcp.NoDelay = true;
+        EnableKeepAlive(_tcp.Client);
         _tcp.SendBufferSize = 512 * 1024;
         _tcp.ReceiveBufferSize = 512 * 1024;
         _stream = tcp.GetStream();
@@ -77,6 +84,30 @@ public sealed class SecureConnection : IDisposable
         TcpListener listener, string password, CancellationToken ct)
     {
         var tcp = await listener.AcceptTcpClientAsync(ct);
+
+        // Рукопожатие ограничено по времени: чужое подключение, которое молчит
+        // (сканер портов, зависший админ), иначе блокировало бы клиента навсегда.
+        using var hsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        hsCts.CancelAfter(HandshakeTimeout);
+        try
+        {
+            return await AcceptHandshakeAsync(tcp, password, hsCts.Token);
+        }
+        catch when (!ct.IsCancellationRequested)
+        {
+            tcp.Close();
+            return null;
+        }
+        catch
+        {
+            tcp.Close();
+            throw;
+        }
+    }
+
+    private static async Task<SecureConnection?> AcceptHandshakeAsync(
+        TcpClient tcp, string password, CancellationToken ct)
+    {
         var stream = tcp.GetStream();
 
         byte[] salt = new byte[16];
@@ -129,15 +160,31 @@ public sealed class SecureConnection : IDisposable
         string host, int port, string password, CancellationToken ct)
     {
         var tcp = new TcpClient();
+        using var hsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        hsCts.CancelAfter(HandshakeTimeout);
         try
         {
-            await tcp.ConnectAsync(host, port, ct);
+            var conn = await ConnectHandshakeAsync(tcp, host, port, password, hsCts.Token);
+            if (conn == null) tcp.Close();
+            return conn;
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // Клиент принял TCP, но не отвечает (занят зависшей сессией) — это сбой связи.
+            tcp.Close();
+            throw new IOException("Handshake timed out");
         }
         catch
         {
             tcp.Close();
             throw;
         }
+    }
+
+    private static async Task<SecureConnection?> ConnectHandshakeAsync(
+        TcpClient tcp, string host, int port, string password, CancellationToken ct)
+    {
+        await tcp.ConnectAsync(host, port, ct);
 
         var stream = tcp.GetStream();
 
@@ -166,10 +213,7 @@ public sealed class SecureConnection : IDisposable
         var conn = new SecureConnection(tcp, key);
         var (type, _) = await conn.ReceiveMessageAsync(ct);
         if (type != MessageType.AuthOk)
-        {
-            conn.Dispose();
             return null;
-        }
 
         return conn;
     }
@@ -194,18 +238,50 @@ public sealed class SecureConnection : IDisposable
         Buffer.BlockCopy(ciphertext, 0, packet, 17, ciphertext.Length);
         Buffer.BlockCopy(tag, 0, packet, 17 + ciphertext.Length, 16);
 
-        await _writeLock.WaitAsync(ct);
+        using var sendCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        sendCts.CancelAfter(SendTimeout);
         try
         {
-            await _stream.WriteAsync(packet, ct);
+            await _writeLock.WaitAsync(sendCts.Token);
+            try
+            {
+                await _stream.WriteAsync(packet, sendCts.Token);
+            }
+            finally
+            {
+                _writeLock.Release();
+            }
         }
-        finally
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
-            _writeLock.Release();
+            throw new IOException("Send timed out");
         }
     }
 
-    public async Task<(MessageType type, byte[] payload)> ReceiveMessageAsync(CancellationToken ct)
+    /// <summary>
+    /// Receive one message. With <paramref name="idleTimeout"/> the call fails with
+    /// IOException when nothing arrives in that time — так обнаруживается соединение,
+    /// которое оборвалось молча (без ошибки сокета) и иначе висело бы вечно.
+    /// </summary>
+    public async Task<(MessageType type, byte[] payload)> ReceiveMessageAsync(
+        CancellationToken ct, TimeSpan? idleTimeout = null)
+    {
+        if (idleTimeout == null)
+            return await ReceiveCoreAsync(ct);
+
+        using var idleCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        idleCts.CancelAfter(idleTimeout.Value);
+        try
+        {
+            return await ReceiveCoreAsync(idleCts.Token);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new IOException("No data from remote side");
+        }
+    }
+
+    private async Task<(MessageType type, byte[] payload)> ReceiveCoreAsync(CancellationToken ct)
     {
         var header = new byte[5];
         await ReadExactAsync(_stream, header, ct);
@@ -235,6 +311,18 @@ public sealed class SecureConnection : IDisposable
     }
 
     public bool IsConnected => _tcp.Connected && !_disposed;
+
+    private static void EnableKeepAlive(Socket socket)
+    {
+        try
+        {
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, 10);
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval, 3);
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveRetryCount, 3);
+        }
+        catch { }
+    }
 
     private static byte[] DeriveKey(string password, byte[] salt)
     {

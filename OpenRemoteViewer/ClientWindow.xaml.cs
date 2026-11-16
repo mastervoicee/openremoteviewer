@@ -32,7 +32,7 @@ public partial class ClientWindow : Window
         InitializeComponent();
         Icon = IconHelper.GetWpfIcon();
         Title = Lang.TitleClient;
-        txtClientTitle.Text = Lang.TitleClient;
+        txtClientTitle.Text = $"{Lang.TitleClient}  v{Updater.CurrentText}";
 
         _port = port;
         _password = password;
@@ -144,9 +144,49 @@ public partial class ClientWindow : Window
         base.OnClosing(e);
     }
 
+    /// <summary>
+    /// Клиент обновляется сам, без участия человека за компьютером: проверка вскоре
+    /// после запуска и дальше раз в час. Если в этот момент идёт просмотр — админ
+    /// переподключится автоматически через несколько секунд.
+    /// </summary>
+    private async Task AutoUpdateLoopAsync()
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(20), _cts.Token);
+
+            while (!_cts.IsCancellationRequested)
+            {
+                var info = await Updater.CheckAsync(_cts.Token);
+                if (info != null)
+                {
+                    try
+                    {
+                        await Updater.ApplyAndRestartAsync(info, new Dictionary<string, string>
+                        {
+                            [Updater.EnvRole] = "Client",
+                            [Updater.EnvPort] = _port.ToString(),
+                            [Updater.EnvPassword] = _password
+                        }, _cts.Token);
+
+                        Shutdown();
+                        System.Windows.Application.Current.Shutdown();
+                        return;
+                    }
+                    catch (OperationCanceledException) { return; }
+                    catch { /* нет прав на папку, обрыв загрузки — попробуем через час */ }
+                }
+
+                await Task.Delay(Updater.CheckInterval, _cts.Token);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
     private async Task StartListeningAsync()
     {
         _ = FetchExternalIPAsync();
+        _ = AutoUpdateLoopAsync();
 
         while (!_cts.IsCancellationRequested)
         {

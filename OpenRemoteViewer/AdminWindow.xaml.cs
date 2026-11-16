@@ -34,6 +34,10 @@ public partial class AdminWindow : Window
     private bool _captureBlocked;
     private bool _closing;
 
+    // Клиент шлёт кадр или «экран недоступен» минимум раз в секунду.
+    // Тишина дольше этого срока = соединение мертво, переподключаемся.
+    private static readonly TimeSpan SilenceTimeout = TimeSpan.FromSeconds(10);
+
     private static readonly SolidColorBrush BrushInactive = new(WpfColor.FromRgb(0x3E, 0x3E, 0x42));
     private static readonly SolidColorBrush BrushActive = new(WpfColor.FromRgb(0x00, 0x7A, 0xCC));
     private static readonly SolidColorBrush BrushBorderInactive = new(WpfColor.FromRgb(0x55, 0x55, 0x58));
@@ -48,7 +52,7 @@ public partial class AdminWindow : Window
     {
         InitializeComponent();
         Icon = IconHelper.GetWpfIcon();
-        Title = Lang.TitleAdmin;
+        Title = $"{Lang.TitleAdmin}  v{Updater.CurrentText}";
         txtScreenLabel.Text = Lang.ScreenLabel;
         txtClickHint.Text = Lang.ClickHint + Lang.DrawHint;
         btnDisconnect.Content = Lang.BtnDisconnect;
@@ -57,8 +61,71 @@ public partial class AdminWindow : Window
         _port = port;
         _password = password;
         _painter = new StrokePainter(canvasDraw);
-        Loaded += async (_, _) => await RunConnectionAsync();
+        Loaded += async (_, _) =>
+        {
+            _ = CheckUpdatesLoopAsync();
+            await RunConnectionAsync();
+        };
     }
+
+    #region Обновление
+
+    private UpdateInfo? _update;
+
+    /// <summary>
+    /// У админа обновление не ставится само (оно прервало бы просмотр):
+    /// в верхней панели появляется кнопка, установка — по нажатию.
+    /// </summary>
+    private async Task CheckUpdatesLoopAsync()
+    {
+        try
+        {
+            while (!_closing)
+            {
+                var info = await Updater.CheckAsync(_cts.Token);
+                if (info != null)
+                {
+                    _update = info;
+                    btnUpdate.Content = string.Format(Lang.UpdateAvailable, info.VersionText);
+                    btnUpdate.Visibility = Visibility.Visible;
+                }
+                await Task.Delay(Updater.CheckInterval, _cts.Token);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async void BtnUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        var info = _update;
+        if (info == null || !btnUpdate.IsEnabled) return;
+
+        btnUpdate.IsEnabled = false;
+        btnUpdate.Content = Lang.Updating;
+        try
+        {
+            await Updater.ApplyAndRestartAsync(info, new Dictionary<string, string>
+            {
+                [Updater.EnvRole] = "Admin",
+                [Updater.EnvHost] = _host,
+                [Updater.EnvPort] = _port.ToString(),
+                [Updater.EnvPassword] = _password
+            }, _cts.Token);
+
+            Shutdown();
+            System.Windows.Application.Current.Shutdown();
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            btnUpdate.IsEnabled = true;
+            btnUpdate.Content = string.Format(Lang.UpdateAvailable, info.VersionText);
+            MessageBox.Show(string.Format(Lang.UpdateFailed, ex.Message),
+                Lang.AppTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    #endregion
 
     /// <summary>
     /// Connect and keep the session alive: if the connection drops (клиент перезагрузился,
@@ -126,7 +193,7 @@ public partial class AdminWindow : Window
         {
             try
             {
-                var (type, payload) = await _connection!.ReceiveMessageAsync(ct);
+                var (type, payload) = await _connection!.ReceiveMessageAsync(ct, SilenceTimeout);
 
                 switch (type)
                 {

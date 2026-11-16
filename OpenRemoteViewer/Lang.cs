@@ -76,7 +76,10 @@ public static class Lang
             ["DrawHint"] = "  |  Right button — draw (disappears after 3 s)",
             ["Reconnecting"] = "Connection lost — reconnecting (attempt {0})...",
             ["PortBusy"] = "Port {0} is taken by another program — waiting for it to free up...",
-            ["ScreenUnavailable"] = "Screen temporarily unavailable (UAC prompt or locked) — waiting..."
+            ["ScreenUnavailable"] = "Screen temporarily unavailable (UAC prompt or locked) — waiting...",
+            ["UpdateAvailable"] = "Update to v{0}",
+            ["Updating"] = "Downloading update…",
+            ["UpdateFailed"] = "Update failed: {0}"
         },
 
         ["ru"] = new()
@@ -135,7 +138,10 @@ public static class Lang
             ["DrawHint"] = "  |  Правая кнопка — рисовать (исчезнет через 3 сек)",
             ["Reconnecting"] = "Соединение потеряно — переподключение (попытка {0})...",
             ["PortBusy"] = "Порт {0} занят другой программой — жду, пока освободится...",
-            ["ScreenUnavailable"] = "Экран временно недоступен (окно UAC или блокировка) — жду..."
+            ["ScreenUnavailable"] = "Экран временно недоступен (окно UAC или блокировка) — жду...",
+            ["UpdateAvailable"] = "Обновить до v{0}",
+            ["Updating"] = "Скачиваю обновление…",
+            ["UpdateFailed"] = "Не удалось обновить: {0}"
         },
 
         ["de"] = new()
@@ -194,7 +200,10 @@ public static class Lang
             ["DrawHint"] = "  |  Rechte Maustaste — zeichnen (verschwindet nach 3 s)",
             ["Reconnecting"] = "Verbindung verloren — erneuter Verbindungsversuch ({0})...",
             ["PortBusy"] = "Port {0} ist von einem anderen Programm belegt — warte auf Freigabe...",
-            ["ScreenUnavailable"] = "Bildschirm vorübergehend nicht verfügbar (UAC-Abfrage oder gesperrt) — warte..."
+            ["ScreenUnavailable"] = "Bildschirm vorübergehend nicht verfügbar (UAC-Abfrage oder gesperrt) — warte...",
+            ["UpdateAvailable"] = "Auf v{0} aktualisieren",
+            ["Updating"] = "Update wird heruntergeladen…",
+            ["UpdateFailed"] = "Update fehlgeschlagen: {0}"
         },
 
         ["es"] = new()
@@ -253,7 +262,10 @@ public static class Lang
             ["DrawHint"] = "  |  Botón derecho — dibujar (desaparece a los 3 s)",
             ["Reconnecting"] = "Conexión perdida — reconectando (intento {0})...",
             ["PortBusy"] = "El puerto {0} está ocupado por otro programa — esperando a que se libere...",
-            ["ScreenUnavailable"] = "Pantalla temporalmente no disponible (aviso UAC o bloqueada) — esperando..."
+            ["ScreenUnavailable"] = "Pantalla temporalmente no disponible (aviso UAC o bloqueada) — esperando...",
+            ["UpdateAvailable"] = "Actualizar a v{0}",
+            ["Updating"] = "Descargando actualización…",
+            ["UpdateFailed"] = "Error de actualización: {0}"
         },
 
         ["fr"] = new()
@@ -312,7 +324,10 @@ public static class Lang
             ["DrawHint"] = "  |  Bouton droit — dessiner (disparaît après 3 s)",
             ["Reconnecting"] = "Connexion perdue — reconnexion (tentative {0})...",
             ["PortBusy"] = "Le port {0} est occupé par un autre programme — en attente de libération...",
-            ["ScreenUnavailable"] = "Écran temporairement indisponible (invite UAC ou session verrouillée) — en attente..."
+            ["ScreenUnavailable"] = "Écran temporairement indisponible (invite UAC ou session verrouillée) — en attente...",
+            ["UpdateAvailable"] = "Mettre à jour vers v{0}",
+            ["Updating"] = "Téléchargement de la mise à jour…",
+            ["UpdateFailed"] = "Échec de la mise à jour : {0}"
         },
 
         ["pl"] = new()
@@ -371,7 +386,10 @@ public static class Lang
             ["DrawHint"] = "  |  Prawy przycisk — rysowanie (znika po 3 s)",
             ["Reconnecting"] = "Połączenie utracone — ponowne łączenie (próba {0})...",
             ["PortBusy"] = "Port {0} jest zajęty przez inny program — czekam na zwolnienie...",
-            ["ScreenUnavailable"] = "Ekran chwilowo niedostępny (okno UAC lub blokada) — czekam..."
+            ["ScreenUnavailable"] = "Ekran chwilowo niedostępny (okno UAC lub blokada) — czekam...",
+            ["UpdateAvailable"] = "Aktualizuj do v{0}",
+            ["Updating"] = "Pobieranie aktualizacji…",
+            ["UpdateFailed"] = "Aktualizacja nie powiodła się: {0}"
         },
 
         ["cs"] = new()
@@ -430,7 +448,10 @@ public static class Lang
             ["DrawHint"] = "  |  Pravé tlačítko — kreslení (zmizí po 3 s)",
             ["Reconnecting"] = "Spojení ztraceno — obnovování spojení (pokus {0})...",
             ["PortBusy"] = "Port {0} je obsazen jiným programem — čekám na uvolnění...",
-            ["ScreenUnavailable"] = "Obrazovka dočasně nedostupná (výzva UAC nebo uzamčení) — čekám..."
+            ["ScreenUnavailable"] = "Obrazovka dočasně nedostupná (výzva UAC nebo uzamčení) — čekám...",
+            ["UpdateAvailable"] = "Aktualizovat na v{0}",
+            ["Updating"] = "Stahuji aktualizaci…",
+            ["UpdateFailed"] = "Aktualizace selhala: {0}"
         },
 
         ["lt"] = new()
@@ -489,7 +510,10 @@ public static class Lang
             ["DrawHint"] = "  |  Dešinysis mygtukas — piešti (išnyks po 3 s)",
             ["Reconnecting"] = "Ryšys nutrūko — jungiamasi iš naujo (bandymas {0})...",
             ["PortBusy"] = "Prievadą {0} užėmė kita programa — laukiu, kol atsilaisvins...",
-            ["ScreenUnavailable"] = "Ekranas laikinai nepasiekiamas (UAC langas arba užrakinta) — laukiu..."
+            ["ScreenUnavailable"] = "Ekranas laikinai nepasiekiamas (UAC langas arba užrakinta) — laukiu...",
+            ["UpdateAvailable"] = "Atnaujinti iki v{0}",
+            ["Updating"] = "Atsisiunčiamas atnaujinimas…",
+            ["UpdateFailed"] = "Atnaujinti nepavyko: {0}"
         },
 
         ["lv"] = new()
@@ -548,7 +572,10 @@ public static class Lang
             ["DrawHint"] = "  |  Labā poga — zīmēt (pazūd pēc 3 s)",
             ["Reconnecting"] = "Savienojums zaudēts — atkārtota pieslēgšanās (mēģinājums {0})...",
             ["PortBusy"] = "Portu {0} aizņem cita programma — gaidu, kad tas atbrīvosies...",
-            ["ScreenUnavailable"] = "Ekrāns īslaicīgi nav pieejams (UAC logs vai bloķēts) — gaidu..."
+            ["ScreenUnavailable"] = "Ekrāns īslaicīgi nav pieejams (UAC logs vai bloķēts) — gaidu...",
+            ["UpdateAvailable"] = "Atjaunināt uz v{0}",
+            ["Updating"] = "Lejupielādē atjauninājumu…",
+            ["UpdateFailed"] = "Atjaunināšana neizdevās: {0}"
         },
 
         ["et"] = new()
@@ -607,7 +634,10 @@ public static class Lang
             ["DrawHint"] = "  |  Parem nupp — joonistamine (kaob 3 s pärast)",
             ["Reconnecting"] = "Ühendus katkes — taasühendamine (katse {0})...",
             ["PortBusy"] = "Port {0} on teise programmi poolt hõivatud — ootan vabanemist...",
-            ["ScreenUnavailable"] = "Ekraan ajutiselt kättesaamatu (UAC aken või lukustatud) — ootan..."
+            ["ScreenUnavailable"] = "Ekraan ajutiselt kättesaamatu (UAC aken või lukustatud) — ootan...",
+            ["UpdateAvailable"] = "Uuenda versioonile v{0}",
+            ["Updating"] = "Uuenduse allalaadimine…",
+            ["UpdateFailed"] = "Uuendamine ebaõnnestus: {0}"
         }
     };
 
@@ -677,4 +707,7 @@ public static class Lang
     public static string Reconnecting => Get("Reconnecting");
     public static string PortBusy => Get("PortBusy");
     public static string ScreenUnavailable => Get("ScreenUnavailable");
+    public static string UpdateAvailable => Get("UpdateAvailable");
+    public static string Updating => Get("Updating");
+    public static string UpdateFailed => Get("UpdateFailed");
 }

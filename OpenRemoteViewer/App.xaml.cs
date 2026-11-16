@@ -18,6 +18,30 @@ public partial class App : System.Windows.Application
             args.Handled = true;
         };
 
+        Updater.CleanupOldVersion();
+
+        // Продолжение работы после самообновления: роль и параметры пришли от прежней копии.
+        if (e.Args.Contains(Updater.ResumeArg))
+        {
+            var role = Environment.GetEnvironmentVariable(Updater.EnvRole);
+            var host = Environment.GetEnvironmentVariable(Updater.EnvHost) ?? "";
+            var pass = Environment.GetEnvironmentVariable(Updater.EnvPassword) ?? "";
+            if (int.TryParse(Environment.GetEnvironmentVariable(Updater.EnvPort), out int port)
+                && !string.IsNullOrEmpty(pass))
+            {
+                if (role == "Admin" && !string.IsNullOrEmpty(host))
+                {
+                    new AdminWindow(host, port, pass).Show();
+                    return;
+                }
+                if (role == "Client")
+                {
+                    new ClientWindow(port, pass, startMinimized: true).Show();
+                    return;
+                }
+            }
+        }
+
         if (e.Args.Contains("--autoconnect"))
         {
             if (settings.RememberSettings && !string.IsNullOrEmpty(settings.GetPassword()))

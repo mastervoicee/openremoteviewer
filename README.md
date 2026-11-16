@@ -1,107 +1,156 @@
 # OpenRemoteViewer
 
-A lightweight, single-file remote screen viewer for Windows. Built with WPF (.NET 8).
+A small, single-file remote screen viewer for Windows. One exe, no installer, no account, no cloud relay: the admin connects straight to the employee's computer and sees its screen live.
+
+[Русская версия](README.ru.md) · [Download the latest release](../../releases/latest)
 
 ## What it does
 
-OpenRemoteViewer lets you view a remote computer's screen in real-time over a network. It works in two roles:
+The same exe works in two roles:
 
-- **Client** — runs on the employee's machine, captures the screen and streams it to the admin
-- **Admin** — connects to a client and views their screen live with FPS counter, multi-monitor switching, and click markers
+- **Client** runs on the computer being watched. It captures the screen and streams it.
+- **Admin** connects to a client and shows its screen in a window.
 
-All traffic is encrypted end-to-end using AES-256-GCM with password-based key derivation (PBKDF2-SHA256, 100k iterations). No data is sent unencrypted.
+The admin only watches. There is no remote mouse or keyboard control. To point at something, the admin can click (a red marker appears on the client's screen) or draw with the right mouse button (the stroke fades out after 3 seconds).
+
+The person at the client computer always knows they are being watched: a notification appears and the tray icon turns red while an admin is connected.
 
 ## Features
 
-- **End-to-end encryption** — challenge-response authentication + AES-GCM encrypted communication
-- **Multi-monitor support** — switch between displays, see where the employee's cursor is
-- **Click overlay** — admin can click on the screen image to place a visible red marker on the client's display
-- **Draw on the client's screen** — hold the **right mouse button** and draw on the image to highlight an element; the stroke appears on the employee's screen and fades out 3 seconds after you stop drawing
-- **Survives UAC / firewall prompts** — when the screen is temporarily not capturable (secure desktop, locked workstation, display change) the session stays alive, the admin sees *"screen temporarily unavailable"*, and the picture comes back by itself
-- **Port protection** — the client's port cannot be hijacked by another program that binds with `SO_REUSEADDR` (Node, Python, Docker and friends); if the port is busy at startup the client waits for it instead of dying
-- **Auto-reconnect** — if the connection drops (client reboot, network blip, tunnel restart) the admin reconnects automatically every 2 seconds
-- **Connection notifications** — when admin connects, the client sees a prominent toast notification and the tray icon turns red
-- **System tray** — client minimizes to tray, stays running in the background
-- **Auto-start** — optional Windows startup with auto-connect (no UI, goes straight to tray)
-- **Remember settings** — saves IP, port, role, and password (DPAPI-encrypted) between sessions
-- **Single exe** — self-contained ~68 MB portable executable, no installation required
-- **Reconnect support** — admin can disconnect and reconnect any number of times without the client needing to restart
+- **Encrypted traffic.** AES-256-GCM, key derived from the shared password (PBKDF2-SHA256, 100 000 iterations), challenge-response authentication.
+- **Multi-monitor.** Switch between the client's displays and see which one the cursor is on.
+- **Click marker and drawing** on the client's screen.
+- **Reconnects by itself.** If the connection drops or goes silent for 10 seconds, the admin reconnects automatically.
+- **Survives UAC prompts and a locked screen.** The session stays alive and the picture comes back.
+- **Updates itself** from this repository's releases (see [Updates](#updates)).
+- **Tray and auto-start.** The client lives in the tray and can start with Windows.
+- **10 interface languages:** English, Russian, German, Spanish, French, Polish, Czech, Lithuanian, Latvian, Estonian.
 
-## Download
+## What you need
 
-Grab the latest `OpenRemoteViewer.exe` from the [Releases](../../releases/latest) page — it's a single portable file, no installation needed.
+- Windows 10 or 11, 64-bit, on both computers. Nothing else to install: .NET is inside the exe.
+- A network path from the admin to the client's port (default `9876`). On one office network this already exists. Between different networks, see [Different networks](#different-networks).
+- The same password on both sides. Choose a long one: the password is the only thing protecting the connection.
+- A folder the program can write to (Desktop, Documents, `C:\Tools`). Self-update replaces the exe in place, so do not put it in `Program Files`.
 
-## Requirements
+On first start Windows may show two prompts:
 
-- Windows 10/11 (x64)
-- .NET 8 runtime (included in the single-file build)
+- **SmartScreen** ("Windows protected your PC"), because the exe is not code-signed. Click *More info* → *Run anyway*.
+- **Windows Firewall** on the client. Allow access, otherwise the admin cannot connect.
 
-## Usage
+## Quick start
 
-### Same network (LAN / office)
+### On the employee's computer (client)
 
-1. Run `OpenRemoteViewer.exe` on both machines
-2. On the employee's machine: select **Client**, set a port and password, click Start
-3. On the admin machine: select **Admin**, enter the client's local IP, same port and password, click Start
-4. The admin window shows the client's screen in real-time
+1. Download `OpenRemoteViewer.exe` and put it in a permanent folder.
+2. Run it, choose **Client**, set a port and a password.
+3. Tick **Remember settings and password** and **Auto-start with Windows** if the computer should be reachable after every reboot.
+4. Click **Start**. The window shows the local and external IP address. You can close it; the program stays in the tray.
 
-### Different networks (remote access)
+### On your computer (admin)
 
-If the admin and client are on different networks, the client's port must be reachable from the internet. Options:
+1. Run the same exe, choose **Admin**.
+2. Enter the client's IP address, the same port and password.
+3. Click **Start**. The client's screen appears.
 
-**Option A — Port forwarding**
-On the client's router, forward the chosen port (e.g. `9876`) to the client machine's local IP. The admin then connects using the client's public IP.
+In the viewer window:
 
-**Option B — Tunnel (no router access needed)**
-Use a free tunneling service to expose the client's port:
+| Action | Result |
+| --- | --- |
+| Left click on the picture | Red marker on the client's screen |
+| Hold right button and draw | A stroke on the client's screen, fades after 3 s |
+| Click a display button at the top | Switch to another monitor of the client |
 
-- [Tailscale](https://tailscale.com) — creates a private mesh VPN between your devices, no port forwarding needed (free for personal use)
-- [ngrok](https://ngrok.com) — `ngrok tcp 9876` (requires free registration)
-- [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) — requires free Cloudflare account
-- [localhost.run](https://localhost.run) — `ssh -R 80:localhost:9876 nokey@localhost.run`
-- [Serveo](https://serveo.net) — `ssh -R 9876:localhost:9876 serveo.net`
+To watch several computers, start one admin window per client (run the exe again for each).
 
-The tunnel gives you a public address that the admin uses to connect.
+## Different networks
+
+The client's port must be reachable from the admin's computer.
+
+**Tailscale (recommended).** Install [Tailscale](https://tailscale.com) on both computers and sign in to the same account. Each computer gets a permanent `100.x.x.x` address. Enter the client's Tailscale address in the admin window. No router setup, nothing exposed to the internet.
+
+**Port forwarding.** On the client's router, forward the port (e.g. `9876`) to the client computer and connect to the external IP shown in the client window. The port becomes visible to the whole internet, so use a strong password.
+
+**A TCP tunnel** such as `ngrok tcp 9876` also works: connect to the address the tunnel gives you.
+
+## Updates
+
+The program checks this repository's [latest release](../../releases/latest) shortly after start and then once an hour.
+
+- **Client** updates silently: it downloads the new exe, replaces itself and restarts with the same port and password. If an admin was watching, the picture returns in a few seconds.
+- **Admin** shows an **Update to vX.Y.Z** button in the top bar and updates when you click it.
+
+A download is installed only if its SHA-256 matches the checksum GitHub publishes for the release file. The current version is shown in the window title.
+
+If an update does not install, the usual reason is that the exe is in a folder the program cannot write to.
+
+## Troubleshooting
+
+| Symptom | What to check |
+| --- | --- |
+| Admin: connection error on first start | IP and port; is the client running; did the client's firewall prompt get allowed |
+| "Wrong password" | Passwords differ, including spaces at the ends |
+| "Port is taken by another program" on the client | Another program uses the port. Choose a different one on both sides |
+| "Screen temporarily unavailable" | A UAC prompt or lock screen is showing on the client. The picture returns by itself |
+| Keeps reconnecting | The client is off, asleep or offline. With Tailscale, check that both computers are online in its menu |
 
 ## Building from source
+
+Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 ```bash
 cd OpenRemoteViewer
 dotnet publish -c Release
 ```
 
-The output is a single self-contained exe at:
+The result is `OpenRemoteViewer/bin/Release/net8.0-windows/win-x64/publish/OpenRemoteViewer.exe`.
+
+### Publishing a new version
+
+1. Raise `<Version>` in `OpenRemoteViewer/OpenRemoteViewer.csproj`.
+2. Build with `dotnet publish -c Release`.
+3. Create a release whose tag is `v` + that version and attach the exe under the name `OpenRemoteViewer.exe`:
+
+```bash
+gh release create v1.2.0 OpenRemoteViewer/bin/Release/net8.0-windows/win-x64/publish/OpenRemoteViewer.exe --title "v1.2.0" --notes "What changed"
 ```
-OpenRemoteViewer/bin/Release/net8.0-windows/win-x64/publish/OpenRemoteViewer.exe
-```
+
+Every running copy picks it up within an hour. If you fork the project, change `Repo` in `Updater.cs` so your builds update from your own releases.
 
 ## How it works
 
-1. Client starts a TCP listener on the specified port
-2. Admin connects and performs a challenge-response handshake using the shared password
-3. A symmetric AES-256-GCM key is derived from the password + random salt
-4. Client captures the screen ~30 times per second (JPEG) and sends encrypted frames
-5. Admin decrypts and displays frames, can send click coordinates, freehand stroke points and monitor switch commands
-6. When admin disconnects, client automatically returns to listening for a new connection
-7. If a frame cannot be captured (UAC prompt, locked screen), the client keeps the session and sends a "capture blocked" notice until capture works again
-
-## Project structure
+1. The client listens on a TCP port.
+2. The admin connects; both sides prove they know the password with a challenge-response handshake and derive an AES-256-GCM key from the password and a random salt.
+3. The client captures the selected monitor about 30 times per second as JPEG and sends encrypted frames.
+4. The admin decrypts and shows them, and sends back clicks, stroke points and monitor-switch commands.
+5. When the admin leaves, the client goes back to waiting. It serves one admin at a time.
 
 ```
 OpenRemoteViewer/
-├── App.xaml / App.xaml.cs          — Application entry, auto-connect logic
-├── MainWindow.xaml / .cs           — Role selection, settings UI
-├── ClientWindow.xaml / .cs         — Client: screen capture, streaming, tray icon
-├── AdminWindow.xaml / .cs          — Admin: screen viewer, multi-monitor UI
-├── AdminNotificationWindow.xaml/.cs — Toast notification shown on client when admin connects
-├── NetworkProtocol.cs              — Encrypted TCP protocol (SecureConnection)
-├── ScreenCapture.cs                — Screen capture and monitor enumeration
-├── ClickOverlay.cs                 — Transparent overlay for click markers and admin drawings
-├── StrokePainter.cs                — Freehand strokes on a canvas, auto-fade 3 s after the last point
-├── IconHelper.cs                   — Programmatic icon generation (blue/red)
-└── AppSettings.cs                  — Settings persistence with encrypted password
+├── App.xaml.cs                  start-up, auto-connect, resume after update
+├── MainWindow.xaml(.cs)         role, address, password, language
+├── ClientWindow.xaml(.cs)       client: capture, streaming, tray, silent update
+├── AdminWindow.xaml(.cs)        admin: viewer, monitor switch, update button
+├── AdminNotificationWindow      "admin connected" notice on the client
+├── NetworkProtocol.cs           encrypted TCP protocol, timeouts, keepalive
+├── ScreenCapture.cs             screen capture and monitor list
+├── ClickOverlay.cs              transparent overlay for markers and strokes
+├── StrokePainter.cs             freehand strokes with fade-out
+├── Updater.cs                   self-update from GitHub Releases
+├── Lang.cs                      interface translations
+├── IconHelper.cs                generated icons
+└── AppSettings.cs               saved settings (password protected with DPAPI)
 ```
+
+## Roadmap
+
+- One admin window showing several clients at once
+- A saved list of clients instead of typing the address each time
+
+## Responsible use
+
+Use it only on computers you own or administer, and tell the people who work on them. Monitoring someone without their knowledge is illegal in many countries.
 
 ## License
 
-MIT
+[MIT](LICENSE)

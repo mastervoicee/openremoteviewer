@@ -1,42 +1,19 @@
+# build output
 bin/
 obj/
 *.exe
 *.pdb
+*.old
+*.new
+
+# IDE
+.vs/
 *.user
 *.suo
-.vs/
 
-# --- добавлено при переносе в GitHub 28.09 ---
-node_modules/
-vendor/
-dist/
-build/
-bin/
-obj/
-.gradle/
-*.exe
-*.pdb
-*.log
-*.rar
-*.zip
-*.sql
-*.sql.gz
-NUL
-# секреты: переносить отдельно, не через git
+# never commit
 .env
 .env.*
-!.env.example
 *.pem
 *.key
-*.jks
-*.keystore
-keystore.properties
-config.php
-config.local.php
-!config.local.example.php
-_secrets*
-__pycache__/
-*.pyc
-*.db
-*.sqlite
-*.sqlite3
+*.log
