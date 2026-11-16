@@ -18,7 +18,11 @@ EXE="OpenRemoteViewer/bin/Release/net8.0-windows/win-x64/publish/OpenRemoteViewe
 (cd OpenRemoteViewer && dotnet publish -c Release)
 
 openssl dgst -sha256 -sign "$KEY" -out "$EXE.sig" "$EXE"
-openssl dgst -sha256 -verify <(openssl ec -in "$KEY" -pubout 2>/dev/null) -signature "$EXE.sig" "$EXE"
+# check the signature with the public half before publishing
+PUB="$(mktemp)"
+openssl ec -in "$KEY" -pubout -out "$PUB" 2>/dev/null
+openssl dgst -sha256 -verify "$PUB" -signature "$EXE.sig" "$EXE"
+rm -f "$PUB"
 
 git push origin HEAD
 git tag "$TAG"
