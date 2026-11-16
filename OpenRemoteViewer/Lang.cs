@@ -85,7 +85,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · Up to date",
             ["UpdateToastTitle"] = "Update available: v{0}",
             ["UpdateToastText"] = "Click the green Update button to install it",
-            ["UpdatedToast"] = "Updated to v{0}"
+            ["UpdatedToast"] = "Updated to v{0}",
+            ["ErrPasswordShort"] = "The password must be at least {0} characters long!",
+            ["ClientOutdated"] = "Connected to {0} — the client runs an old version, update it"
         },
 
         ["ru"] = new()
@@ -153,7 +155,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · Обновлений нет",
             ["UpdateToastTitle"] = "Доступно обновление v{0}",
             ["UpdateToastText"] = "Нажмите зелёную кнопку «Обновить», чтобы установить",
-            ["UpdatedToast"] = "Обновлено до v{0}"
+            ["UpdatedToast"] = "Обновлено до v{0}",
+            ["ErrPasswordShort"] = "Пароль должен быть не короче {0} символов!",
+            ["ClientOutdated"] = "Подключено к {0} — у клиента старая версия, обновите её"
         },
 
         ["de"] = new()
@@ -221,7 +225,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · Aktuell",
             ["UpdateToastTitle"] = "Update verfügbar: v{0}",
             ["UpdateToastText"] = "Zum Installieren auf die grüne Update-Schaltfläche klicken",
-            ["UpdatedToast"] = "Aktualisiert auf v{0}"
+            ["UpdatedToast"] = "Aktualisiert auf v{0}",
+            ["ErrPasswordShort"] = "Das Passwort muss mindestens {0} Zeichen lang sein!",
+            ["ClientOutdated"] = "Verbunden mit {0} — der Client nutzt eine alte Version, bitte aktualisieren"
         },
 
         ["es"] = new()
@@ -289,7 +295,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · Actualizado",
             ["UpdateToastTitle"] = "Actualización disponible: v{0}",
             ["UpdateToastText"] = "Pulse el botón verde Actualizar para instalarla",
-            ["UpdatedToast"] = "Actualizado a v{0}"
+            ["UpdatedToast"] = "Actualizado a v{0}",
+            ["ErrPasswordShort"] = "¡La contraseña debe tener al menos {0} caracteres!",
+            ["ClientOutdated"] = "Conectado a {0} — el cliente usa una versión antigua, actualícela"
         },
 
         ["fr"] = new()
@@ -357,7 +365,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · À jour",
             ["UpdateToastTitle"] = "Mise à jour disponible : v{0}",
             ["UpdateToastText"] = "Cliquez sur le bouton vert Mettre à jour pour l'installer",
-            ["UpdatedToast"] = "Mis à jour vers v{0}"
+            ["UpdatedToast"] = "Mis à jour vers v{0}",
+            ["ErrPasswordShort"] = "Le mot de passe doit contenir au moins {0} caractères !",
+            ["ClientOutdated"] = "Connecté à {0} — le client utilise une ancienne version, mettez-le à jour"
         },
 
         ["pl"] = new()
@@ -425,7 +435,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · Aktualna",
             ["UpdateToastTitle"] = "Dostępna aktualizacja: v{0}",
             ["UpdateToastText"] = "Kliknij zielony przycisk Aktualizuj, aby zainstalować",
-            ["UpdatedToast"] = "Zaktualizowano do v{0}"
+            ["UpdatedToast"] = "Zaktualizowano do v{0}",
+            ["ErrPasswordShort"] = "Hasło musi mieć co najmniej {0} znaków!",
+            ["ClientOutdated"] = "Połączono z {0} — klient ma starą wersję, zaktualizuj go"
         },
 
         ["cs"] = new()
@@ -493,7 +505,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · Aktuální",
             ["UpdateToastTitle"] = "Dostupná aktualizace: v{0}",
             ["UpdateToastText"] = "Klikněte na zelené tlačítko Aktualizovat",
-            ["UpdatedToast"] = "Aktualizováno na v{0}"
+            ["UpdatedToast"] = "Aktualizováno na v{0}",
+            ["ErrPasswordShort"] = "Heslo musí mít alespoň {0} znaků!",
+            ["ClientOutdated"] = "Připojeno k {0} — klient má starou verzi, aktualizujte ji"
         },
 
         ["lt"] = new()
@@ -561,7 +575,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · Naujausia versija",
             ["UpdateToastTitle"] = "Yra atnaujinimas: v{0}",
             ["UpdateToastText"] = "Spustelėkite žalią mygtuką Atnaujinti",
-            ["UpdatedToast"] = "Atnaujinta iki v{0}"
+            ["UpdatedToast"] = "Atnaujinta iki v{0}",
+            ["ErrPasswordShort"] = "Slaptažodis turi būti bent {0} simbolių!",
+            ["ClientOutdated"] = "Prisijungta prie {0} — kliento versija sena, atnaujinkite ją"
         },
 
         ["lv"] = new()
@@ -629,7 +645,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · Jaunākā versija",
             ["UpdateToastTitle"] = "Pieejams atjauninājums: v{0}",
             ["UpdateToastText"] = "Nospiediet zaļo pogu Atjaunināt",
-            ["UpdatedToast"] = "Atjaunināts uz v{0}"
+            ["UpdatedToast"] = "Atjaunināts uz v{0}",
+            ["ErrPasswordShort"] = "Parolei jābūt vismaz {0} rakstzīmes garai!",
+            ["ClientOutdated"] = "Savienots ar {0} — klientam ir veca versija, atjauniniet to"
         },
 
         ["et"] = new()
@@ -697,7 +715,9 @@ public static class Lang
             ["UpToDate"] = "v{0} · Ajakohane",
             ["UpdateToastTitle"] = "Uuendus saadaval: v{0}",
             ["UpdateToastText"] = "Klõpsake rohelist nuppu Uuenda",
-            ["UpdatedToast"] = "Uuendatud versioonile v{0}"
+            ["UpdatedToast"] = "Uuendatud versioonile v{0}",
+            ["ErrPasswordShort"] = "Parool peab olema vähemalt {0} märki pikk!",
+            ["ClientOutdated"] = "Ühendatud: {0} — kliendil on vana versioon, uuendage see"
         }
     };
 
@@ -776,4 +796,6 @@ public static class Lang
     public static string UpdateToastTitle => Get("UpdateToastTitle");
     public static string UpdateToastText => Get("UpdateToastText");
     public static string UpdatedToast => Get("UpdatedToast");
+    public static string ErrPasswordShort => Get("ErrPasswordShort");
+    public static string ClientOutdated => Get("ClientOutdated");
 }

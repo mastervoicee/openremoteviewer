@@ -155,6 +155,14 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Короткий пароль подбирается за минуты — не принимаем.
+        if (password.Length < SecureConnection.MinPasswordLength)
+        {
+            MessageBox.Show(string.Format(Lang.ErrPasswordShort, SecureConnection.MinPasswordLength),
+                Lang.AppTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         if (!int.TryParse(GetPort(), out int port) || port < 1 || port > 65535)
         {
             MessageBox.Show(Lang.ErrInvalidPort, Lang.AppTitle, MessageBoxButton.OK, MessageBoxImage.Warning);

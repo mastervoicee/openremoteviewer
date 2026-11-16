@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -51,13 +52,75 @@ public readonly record struct DrawPoint(int StrokeId, bool IsStart, int X, int Y
     }
 }
 
+/// <summary>
+/// Slows down password guessing over the network. After a few wrong passwords from
+/// one address that address is refused for a growing time — without touching
+/// connections from other addresses, so a guesser cannot lock the real admin out.
+/// </summary>
+internal static class AuthThrottle
+{
+    private const int FreeAttempts = 5;
+    private static readonly TimeSpan MaxBlock = TimeSpan.FromHours(1);
+    private static readonly Dictionary<IPAddress, (int Fails, DateTime BlockedUntil)> Entries = [];
+
+    public static bool IsBlocked(IPAddress ip)
+    {
+        lock (Entries)
+            return Entries.TryGetValue(ip, out var e) && e.BlockedUntil > DateTime.UtcNow;
+    }
+
+    public static void RecordFailure(IPAddress ip)
+    {
+        lock (Entries)
+        {
+            if (Entries.Count > 10_000)
+            {
+                var now = DateTime.UtcNow;
+                foreach (var stale in Entries.Where(p => p.Value.BlockedUntil < now).Select(p => p.Key).ToList())
+                    Entries.Remove(stale);
+            }
+
+            int fails = Entries.TryGetValue(ip, out var e) ? e.Fails + 1 : 1;
+            var until = DateTime.MinValue;
+            if (fails >= FreeAttempts)
+            {
+                // 1, 2, 4, 8 ... минут, но не дольше часа
+                double minutes = Math.Pow(2, Math.Min(fails - FreeAttempts, 10));
+                var block = TimeSpan.FromMinutes(minutes);
+                until = DateTime.UtcNow + (block < MaxBlock ? block : MaxBlock);
+            }
+            Entries[ip] = (fails, until);
+        }
+    }
+
+    public static void RecordSuccess(IPAddress ip)
+    {
+        lock (Entries) Entries.Remove(ip);
+    }
+}
+
 public sealed class SecureConnection : IDisposable
 {
+    /// <summary>Shortest password the settings window accepts.</summary>
+    public const int MinPasswordLength = 10;
+
     private readonly TcpClient _tcp;
     private readonly NetworkStream _stream;
     private readonly byte[] _key;
+    private readonly bool _isClientSide;
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private bool _disposed;
+
+    // Номера сообщений в каждом направлении. Вместе с типом и направлением входят
+    // в проверяемые данные шифра: пакет нельзя повторить, переставить, отразить
+    // обратно отправителю или выдать за сообщение другого типа.
+    private ulong _sendSeq;
+    private ulong _recvSeq;
+
+    // Клиент версии до 1.2.0: без проверяемого заголовка. Включается только на
+    // стороне админа и только если так ответил сам клиент — подменить ответ
+    // нового клиента на «старый» без пароля нельзя.
+    private bool _legacyPeer;
 
     /// <summary>Сколько ждём рукопожатие. Молчащее подключение не должно занимать порт вечно.</summary>
     public static readonly TimeSpan HandshakeTimeout = TimeSpan.FromSeconds(10);
@@ -65,7 +128,10 @@ public sealed class SecureConnection : IDisposable
     /// <summary>Сколько ждём, пока уйдёт один пакет. Дольше — соединение мертво.</summary>
     public static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(15);
 
-    private SecureConnection(TcpClient tcp, byte[] key)
+    /// <summary>True when the other side runs a version older than 1.2.0.</summary>
+    public bool IsLegacyPeer => _legacyPeer;
+
+    private SecureConnection(TcpClient tcp, byte[] key, bool isClientSide)
     {
         _tcp = tcp;
         _tcp.NoDelay = true;
@@ -74,6 +140,7 @@ public sealed class SecureConnection : IDisposable
         _tcp.ReceiveBufferSize = 512 * 1024;
         _stream = tcp.GetStream();
         _key = key;
+        _isClientSide = isClientSide;
     }
 
     /// <summary>
@@ -85,13 +152,23 @@ public sealed class SecureConnection : IDisposable
     {
         var tcp = await listener.AcceptTcpClientAsync(ct);
 
+        var remote = (tcp.Client.RemoteEndPoint as IPEndPoint)?.Address ?? IPAddress.None;
+        if (remote.IsIPv4MappedToIPv6) remote = remote.MapToIPv4();
+
+        // Адрес, с которого подбирали пароль, отсекаем сразу — без рукопожатия.
+        if (AuthThrottle.IsBlocked(remote))
+        {
+            tcp.Close();
+            return null;
+        }
+
         // Рукопожатие ограничено по времени: чужое подключение, которое молчит
         // (сканер портов, зависший админ), иначе блокировало бы клиента навсегда.
         using var hsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         hsCts.CancelAfter(HandshakeTimeout);
         try
         {
-            return await AcceptHandshakeAsync(tcp, password, hsCts.Token);
+            return await AcceptHandshakeAsync(tcp, remote, password, hsCts.Token);
         }
         catch when (!ct.IsCancellationRequested)
         {
@@ -106,7 +183,7 @@ public sealed class SecureConnection : IDisposable
     }
 
     private static async Task<SecureConnection?> AcceptHandshakeAsync(
-        TcpClient tcp, string password, CancellationToken ct)
+        TcpClient tcp, IPAddress remote, string password, CancellationToken ct)
     {
         var stream = tcp.GetStream();
 
@@ -120,11 +197,13 @@ public sealed class SecureConnection : IDisposable
         Buffer.BlockCopy(challenge, 0, handshake, 16, 16);
         await stream.WriteAsync(handshake, ct);
 
-        byte[] key = DeriveKey(password, salt);
+        // вывод ключа тяжёлый — не в потоке интерфейса
+        byte[] key = await Task.Run(() => DeriveKey(password, salt), ct);
 
         var response = new byte[44]; // 12 nonce + 16 ciphertext + 16 tag
         await ReadExactAsync(stream, response, ct);
 
+        bool ok;
         try
         {
             byte[] decrypted = new byte[16];
@@ -135,19 +214,23 @@ public sealed class SecureConnection : IDisposable
                 response.AsSpan(28, 16),
                 decrypted);
 
-            if (!CryptographicOperations.FixedTimeEquals(decrypted, challenge))
-            {
-                tcp.Close();
-                return null;
-            }
+            ok = CryptographicOperations.FixedTimeEquals(decrypted, challenge);
         }
-        catch
+        catch (CryptographicException)
         {
+            ok = false;
+        }
+
+        if (!ok)
+        {
+            AuthThrottle.RecordFailure(remote);
             tcp.Close();
             return null;
         }
 
-        var conn = new SecureConnection(tcp, key);
+        AuthThrottle.RecordSuccess(remote);
+
+        var conn = new SecureConnection(tcp, key, isClientSide: true);
         await conn.SendMessageAsync(MessageType.AuthOk, [], ct);
         return conn;
     }
@@ -193,7 +276,7 @@ public sealed class SecureConnection : IDisposable
         byte[] salt = handshake[..16];
         byte[] challenge = handshake[16..];
 
-        byte[] key = DeriveKey(password, salt);
+        byte[] key = await Task.Run(() => DeriveKey(password, salt), ct);
 
         byte[] nonce = new byte[12];
         RandomNumberGenerator.Fill(nonce);
@@ -210,34 +293,37 @@ public sealed class SecureConnection : IDisposable
         Buffer.BlockCopy(tag, 0, response, 28, 16);
         await stream.WriteAsync(response, ct);
 
-        var conn = new SecureConnection(tcp, key);
-        var (type, _) = await conn.ReceiveMessageAsync(ct);
-        if (type != MessageType.AuthOk)
-            return null;
+        var conn = new SecureConnection(tcp, key, isClientSide: false);
 
-        return conn;
+        // Первое сообщение клиента показывает, какой у него протокол.
+        var (type, block) = await conn.ReadBlockAsync(ct);
+        try
+        {
+            conn.Decrypt(type, block);
+        }
+        catch (CryptographicException)
+        {
+            conn._legacyPeer = true;
+            conn.Decrypt(type, block); // не расшифровалось и так — пароль/данные неверны
+        }
+
+        return type == MessageType.AuthOk ? conn : null;
+    }
+
+    /// <summary>Authenticated header: direction, message type, sequence number.</summary>
+    private byte[]? BuildHeader(bool sending, MessageType type, ulong seq)
+    {
+        if (_legacyPeer) return null;
+
+        var header = new byte[10];
+        header[0] = sending == _isClientSide ? (byte)0 : (byte)1; // 0 = клиент → админ
+        header[1] = (byte)type;
+        BinaryPrimitives.WriteUInt64LittleEndian(header.AsSpan(2), seq);
+        return header;
     }
 
     public async Task SendMessageAsync(MessageType type, byte[] payload, CancellationToken ct)
     {
-        byte[] nonce = new byte[12];
-        RandomNumberGenerator.Fill(nonce);
-        byte[] ciphertext = new byte[payload.Length];
-        byte[] tag = new byte[16];
-
-        using (var aes = new AesGcm(_key, 16))
-        {
-            aes.Encrypt(nonce, payload, ciphertext, tag);
-        }
-
-        int blockLen = 12 + ciphertext.Length + 16;
-        var packet = new byte[5 + blockLen];
-        packet[0] = (byte)type;
-        BitConverter.TryWriteBytes(packet.AsSpan(1), blockLen);
-        Buffer.BlockCopy(nonce, 0, packet, 5, 12);
-        Buffer.BlockCopy(ciphertext, 0, packet, 17, ciphertext.Length);
-        Buffer.BlockCopy(tag, 0, packet, 17 + ciphertext.Length, 16);
-
         using var sendCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         sendCts.CancelAfter(SendTimeout);
         try
@@ -245,7 +331,27 @@ public sealed class SecureConnection : IDisposable
             await _writeLock.WaitAsync(sendCts.Token);
             try
             {
+                // шифруем под блокировкой: номер сообщения должен совпасть с порядком в канале
+                byte[] nonce = new byte[12];
+                RandomNumberGenerator.Fill(nonce);
+                byte[] ciphertext = new byte[payload.Length];
+                byte[] tag = new byte[16];
+
+                using (var aes = new AesGcm(_key, 16))
+                {
+                    aes.Encrypt(nonce, payload, ciphertext, tag, BuildHeader(true, type, _sendSeq));
+                }
+
+                int blockLen = 12 + ciphertext.Length + 16;
+                var packet = new byte[5 + blockLen];
+                packet[0] = (byte)type;
+                BitConverter.TryWriteBytes(packet.AsSpan(1), blockLen);
+                Buffer.BlockCopy(nonce, 0, packet, 5, 12);
+                Buffer.BlockCopy(ciphertext, 0, packet, 17, ciphertext.Length);
+                Buffer.BlockCopy(tag, 0, packet, 17 + ciphertext.Length, 16);
+
                 await _stream.WriteAsync(packet, sendCts.Token);
+                _sendSeq++;
             }
             finally
             {
@@ -283,6 +389,12 @@ public sealed class SecureConnection : IDisposable
 
     private async Task<(MessageType type, byte[] payload)> ReceiveCoreAsync(CancellationToken ct)
     {
+        var (type, block) = await ReadBlockAsync(ct);
+        return (type, Decrypt(type, block));
+    }
+
+    private async Task<(MessageType type, byte[] block)> ReadBlockAsync(CancellationToken ct)
+    {
         var header = new byte[5];
         await ReadExactAsync(_stream, header, ct);
 
@@ -294,8 +406,13 @@ public sealed class SecureConnection : IDisposable
 
         var block = new byte[blockLen];
         await ReadExactAsync(_stream, block, ct);
+        return (type, block);
+    }
 
-        int ciphertextLen = blockLen - 28;
+    /// <summary>Decrypts the next expected message; a replayed, reordered or relabelled one fails.</summary>
+    private byte[] Decrypt(MessageType type, byte[] block)
+    {
+        int ciphertextLen = block.Length - 28;
         byte[] plaintext = new byte[ciphertextLen];
 
         using (var aes = new AesGcm(_key, 16))
@@ -303,11 +420,13 @@ public sealed class SecureConnection : IDisposable
             aes.Decrypt(
                 block.AsSpan(0, 12),
                 block.AsSpan(12, ciphertextLen),
-                block.AsSpan(blockLen - 16, 16),
-                plaintext);
+                block.AsSpan(block.Length - 16, 16),
+                plaintext,
+                BuildHeader(false, type, _recvSeq));
         }
 
-        return (type, plaintext);
+        _recvSeq++;
+        return plaintext;
     }
 
     public bool IsConnected => _tcp.Connected && !_disposed;

@@ -110,7 +110,7 @@ public partial class AdminWindow : Window
                 firstAttempt = false;
                 attempt = 0;
                 _captureBlocked = false;
-                txtAdminStatus.Text = string.Format(Lang.ConnectedTo, _host);
+                txtAdminStatus.Text = ConnectedStatus();
 
                 await Task.Run(() => ReceiveLoop(_cts.Token));
             }
@@ -137,6 +137,9 @@ public partial class AdminWindow : Window
             catch (OperationCanceledException) { return; }
         }
     }
+
+    private string ConnectedStatus() => string.Format(
+        _connection?.IsLegacyPeer == true ? Lang.ClientOutdated : Lang.ConnectedTo, _host);
 
     private async Task ReceiveLoop(CancellationToken ct)
     {
@@ -415,7 +418,7 @@ public partial class AdminWindow : Window
                 if (_captureBlocked)
                 {
                     _captureBlocked = false;
-                    txtAdminStatus.Text = string.Format(Lang.ConnectedTo, _host);
+                    txtAdminStatus.Text = ConnectedStatus();
                 }
 
                 _frameCount++;

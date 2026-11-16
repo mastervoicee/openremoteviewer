@@ -30,7 +30,7 @@ The person at the client computer always knows they are being watched: a notific
 
 - Windows 10 or 11, 64-bit, on both computers. Nothing else to install: .NET is inside the exe.
 - A network path from the admin to the client's port (default `9876`). On one office network this already exists. Between different networks, see [Different networks](#different-networks).
-- The same password on both sides. Choose a long one: the password is the only thing protecting the connection.
+- The same password on both sides, at least 10 characters. Choose a long random one: the password is the only thing protecting the connection.
 - A folder the program can write to (Desktop, Documents, `C:\Tools`). Self-update replaces the exe in place, so do not put it in `Program Files`.
 
 On first start Windows may show two prompts:
@@ -80,7 +80,7 @@ The program checks this repository's [latest release](../../releases/latest) sho
 - **Client** updates silently: it downloads the new exe, replaces itself and restarts with the same port and password. If an admin was watching, the picture returns in a few seconds.
 - **Admin** and the start window always show a version button (**v1.1.1 · Check for updates**). A click checks right away. When a new version is out, the button turns green (**Update to vX.Y.Z**), a notification pops up, and a click installs it and reopens the same connection.
 
-A download is installed only if its SHA-256 matches the checksum GitHub publishes for the release file. The current version is shown in the window title.
+A download is installed only if it carries a valid signature made with the publisher's private key (ECDSA P-256). The matching public key is built into the program, so neither a tampered download nor a hijacked GitHub account can push code to your computers. The current version is shown in the window title.
 
 If an update does not install, the usual reason is that the exe is in a folder the program cannot write to.
 
@@ -107,15 +107,24 @@ The result is `OpenRemoteViewer/bin/Release/net8.0-windows/win-x64/publish/OpenR
 
 ### Publishing a new version
 
-1. Raise `<Version>` in `OpenRemoteViewer/OpenRemoteViewer.csproj`.
-2. Build with `dotnet publish -c Release`.
-3. Create a release whose tag is `v` + that version and attach the exe under the name `OpenRemoteViewer.exe`:
+Releases are signed. Once, create a signing key and keep it outside the repository (and keep a backup: without it you cannot publish updates that existing copies will accept):
 
 ```bash
-gh release create v1.2.0 OpenRemoteViewer/bin/Release/net8.0-windows/win-x64/publish/OpenRemoteViewer.exe --title "v1.2.0" --notes "What changed"
+mkdir -p ~/.orv && openssl ecparam -genkey -name prime256v1 -noout -out ~/.orv/update-signing.pem
 ```
 
-Every running copy picks it up within an hour. If you fork the project, change `Repo` in `Updater.cs` so your builds update from your own releases.
+Print its public half with `openssl ec -in ~/.orv/update-signing.pem -pubout` and put it into `PublisherPublicKey` in `Updater.cs`. If you fork the project, also change `Repo` there, so your builds update from your own releases.
+
+Then, for every version:
+
+1. Raise `<Version>` in `OpenRemoteViewer/OpenRemoteViewer.csproj` and commit.
+2. Run the release script from Git Bash:
+
+```bash
+./release.sh "What changed"
+```
+
+It builds the exe, signs it, pushes the tag `v<Version>` and creates the GitHub release with `OpenRemoteViewer.exe` and `OpenRemoteViewer.exe.sig`. Every running copy picks it up within an hour.
 
 ## How it works
 
@@ -142,6 +151,16 @@ OpenRemoteViewer/
 ├── UpdatePrompt.cs               version / update button and notices
 └── AppSettings.cs               saved settings (password protected with DPAPI)
 ```
+
+## Security
+
+- **Password.** Everything rests on the shared password: use a long random one. The settings window refuses passwords shorter than 10 characters.
+- **Guessing over the network.** After 5 wrong passwords from one address the client refuses that address for 1 minute, then 2, 4 and so on up to an hour.
+- **Tampering in transit.** Every message is encrypted and bound to its type, direction and sequence number, so it cannot be replayed, reordered, relabelled or reflected.
+- **Updates** are accepted only with the publisher's signature.
+- **Not covered yet.** Someone who records the traffic and later learns the password can decrypt the recording, and can try passwords against a recorded handshake offline. A long password makes the second attack impractical. Prefer a private network such as Tailscale over an open port.
+
+Found a problem? Please open an issue.
 
 ## Roadmap
 

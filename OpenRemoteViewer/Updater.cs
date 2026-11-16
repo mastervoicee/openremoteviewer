@@ -7,20 +7,31 @@ using System.Text.Json;
 
 namespace OpenRemoteViewer;
 
-public sealed record UpdateInfo(Version Version, string Url, string Sha256)
+public sealed record UpdateInfo(Version Version, string Url, string SignatureUrl)
 {
     public string VersionText => Version.ToString(3);
 }
 
 /// <summary>
-/// Self-update from GitHub Releases: the latest release must carry an asset named
-/// OpenRemoteViewer.exe. The download is accepted only when its SHA-256 matches the
-/// digest GitHub reports for that asset.
+/// Self-update from GitHub Releases. The latest release must carry two assets:
+/// OpenRemoteViewer.exe and OpenRemoteViewer.exe.sig (ECDSA P-256 / SHA-256 signature
+/// of the exe). A download is installed only when the signature matches the public
+/// key below, so a hijacked GitHub account or a tampered download cannot push code:
+/// the private key never leaves the publisher's computer.
 /// </summary>
 public static class Updater
 {
     public const string Repo = "mastervoicee/openremoteviewer";
     private const string AssetName = "OpenRemoteViewer.exe";
+    private const string SignatureAssetName = AssetName + ".sig";
+
+    // Открытый ключ издателя. В форке замените на свой (см. README, «Выпуск новой версии»).
+    private const string PublisherPublicKey = """
+        -----BEGIN PUBLIC KEY-----
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEU6vBUjTWOd3TReX0+F93Gw2ODC24
+        m6LMpd3G8cOu3ApZx/I59mI36Vy0qN/GCluyQjGBXE3zNX2o0NlZoro5Ug==
+        -----END PUBLIC KEY-----
+        """;
 
     // Параметры, с которыми новая копия продолжает работу после обновления.
     // Передаются через окружение дочернего процесса, а не через командную строку,
@@ -90,25 +101,37 @@ public static class Updater
             var version = Normalize(parsed);
             if (version <= Current) return null;
 
+            string? url = null, signatureUrl = null;
             foreach (var asset in root.GetProperty("assets").EnumerateArray())
             {
-                if (asset.GetProperty("name").GetString() != AssetName) continue;
-
-                var url = asset.GetProperty("browser_download_url").GetString();
-                var digest = asset.TryGetProperty("digest", out var d) ? d.GetString() : null;
-
-                // Без контрольной суммы обновление не ставим.
-                if (string.IsNullOrEmpty(url) || digest == null ||
-                    !digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase))
-                    return null;
-
-                return new UpdateInfo(version, url, digest["sha256:".Length..]);
+                var name = asset.GetProperty("name").GetString();
+                var link = asset.GetProperty("browser_download_url").GetString();
+                if (name == AssetName) url = link;
+                else if (name == SignatureAssetName) signatureUrl = link;
             }
+
+            // Без подписи обновление не ставим.
+            if (!string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(signatureUrl))
+                return new UpdateInfo(version, url, signatureUrl);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
         catch { }
 
         return null;
+    }
+
+    private static bool IsSignedByPublisher(byte[] sha256, byte[] signature)
+    {
+        try
+        {
+            using var key = ECDsa.Create();
+            key.ImportFromPem(PublisherPublicKey);
+            return key.VerifyHash(sha256, signature, DSASignatureFormat.Rfc3279DerSequence);
+        }
+        catch (CryptographicException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -133,14 +156,16 @@ public static class Updater
             await resp.Content.CopyToAsync(file, dlCts.Token);
         }
 
-        string hash;
-        await using (var file = File.OpenRead(tmp))
-            hash = Convert.ToHexString(await SHA256.HashDataAsync(file, ct));
+        byte[] signature = await Http.GetByteArrayAsync(info.SignatureUrl, ct);
 
-        if (!hash.Equals(info.Sha256, StringComparison.OrdinalIgnoreCase))
+        byte[] hash;
+        await using (var file = File.OpenRead(tmp))
+            hash = await SHA256.HashDataAsync(file, ct);
+
+        if (!IsSignedByPublisher(hash, signature))
         {
             File.Delete(tmp);
-            throw new InvalidDataException("Checksum mismatch");
+            throw new InvalidDataException("Update signature is not valid");
         }
 
         // Запущенный exe нельзя перезаписать, но можно переименовать.
