@@ -32,14 +32,20 @@ public partial class App : System.Windows.Application
                 if (role == "Admin" && !string.IsNullOrEmpty(host))
                 {
                     new AdminWindow(host, port, pass).Show();
+                    ShowUpdatedNotice();
                     return;
                 }
                 if (role == "Client")
                 {
+                    // клиент обновляется молча — человека за компьютером не отвлекаем
                     new ClientWindow(port, pass, startMinimized: true).Show();
                     return;
                 }
             }
+
+            new MainWindow().Show();
+            ShowUpdatedNotice();
+            return;
         }
 
         if (e.Args.Contains("--autoconnect"))
@@ -61,4 +67,9 @@ public partial class App : System.Windows.Application
 
         new MainWindow().Show();
     }
+
+    private static void ShowUpdatedNotice() =>
+        new AdminNotificationWindow(
+            string.Format(Lang.UpdatedToast, Updater.CurrentText), Lang.AppTitle, "✓",
+            autoCloseSeconds: 10).Show();
 }

@@ -22,11 +22,10 @@
                         Padding="12,3" FontSize="12" Cursor="Hand"
                         Background="#D32F2F" Foreground="White" BorderThickness="0"
                         Click="BtnDisconnect_Click"/>
-                <Button x:Name="btnUpdate" Content="Update" Visibility="Collapsed"
+                <Button x:Name="btnUpdate" Content="v1.0.0"
                         VerticalAlignment="Center" Margin="10,0,0,0"
                         Padding="12,3" FontSize="12" Cursor="Hand"
-                        Background="#2E7D32" Foreground="White" BorderThickness="0"
-                        Click="BtnUpdate_Click"/>
+                        Background="#3E3E42" Foreground="#DDD" BorderThickness="0"/>
             </StackPanel>
         </Border>
 

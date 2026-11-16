@@ -78,7 +78,7 @@ The client's port must be reachable from the admin's computer.
 The program checks this repository's [latest release](../../releases/latest) shortly after start and then once an hour.
 
 - **Client** updates silently: it downloads the new exe, replaces itself and restarts with the same port and password. If an admin was watching, the picture returns in a few seconds.
-- **Admin** shows an **Update to vX.Y.Z** button in the top bar and updates when you click it.
+- **Admin** and the start window always show a version button (**v1.1.1 · Check for updates**). A click checks right away. When a new version is out, the button turns green (**Update to vX.Y.Z**), a notification pops up, and a click installs it and reopens the same connection.
 
 A download is installed only if its SHA-256 matches the checksum GitHub publishes for the release file. The current version is shown in the window title.
 
@@ -130,7 +130,7 @@ OpenRemoteViewer/
 ├── App.xaml.cs                  start-up, auto-connect, resume after update
 ├── MainWindow.xaml(.cs)         role, address, password, language
 ├── ClientWindow.xaml(.cs)       client: capture, streaming, tray, silent update
-├── AdminWindow.xaml(.cs)        admin: viewer, monitor switch, update button
+├── AdminWindow.xaml(.cs)        admin: viewer, monitor switch, version / update button
 ├── AdminNotificationWindow      "admin connected" notice on the client
 ├── NetworkProtocol.cs           encrypted TCP protocol, timeouts, keepalive
 ├── ScreenCapture.cs             screen capture and monitor list
@@ -139,6 +139,7 @@ OpenRemoteViewer/
 ├── Updater.cs                   self-update from GitHub Releases
 ├── Lang.cs                      interface translations
 ├── IconHelper.cs                generated icons
+├── UpdatePrompt.cs               version / update button and notices
 └── AppSettings.cs               saved settings (password protected with DPAPI)
 ```
 

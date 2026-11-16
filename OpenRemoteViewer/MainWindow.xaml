@@ -345,15 +345,20 @@
             <!-- Status bar -->
             <Border Grid.Row="2" Background="#f8f9fc" CornerRadius="0,0,16,16"
                     BorderBrush="#0D000000" BorderThickness="0,1,0,0" Padding="16,10">
-                <StackPanel Orientation="Horizontal">
-                    <Ellipse Width="6" Height="6" Margin="0,0,8,0">
-                        <Ellipse.Fill>
-                            <SolidColorBrush Color="#00c4a0"/>
-                        </Ellipse.Fill>
-                    </Ellipse>
-                    <TextBlock x:Name="txtStatus" FontSize="11" Foreground="#aab0bc"
-                               FontFamily="Consolas"/>
-                </StackPanel>
+                <DockPanel LastChildFill="False">
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                        <Ellipse Width="6" Height="6" Margin="0,0,8,0">
+                            <Ellipse.Fill>
+                                <SolidColorBrush Color="#00c4a0"/>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                        <TextBlock x:Name="txtStatus" FontSize="11" Foreground="#aab0bc"
+                                   FontFamily="Consolas"/>
+                    </StackPanel>
+                    <Button x:Name="btnUpdate" DockPanel.Dock="Right" Content="v1.0.0"
+                            Padding="10,3" FontSize="11" Cursor="Hand"
+                            Background="#E9ECF3" Foreground="#4b5563" BorderThickness="0"/>
+                </DockPanel>
             </Border>
         </Grid>
     </Border>

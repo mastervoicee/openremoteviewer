@@ -4,7 +4,7 @@
         Title="Notification" Width="380" Height="110"
         WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Topmost="True"
-        ShowInTaskbar="False" ResizeMode="NoResize"
+        ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         TextOptions.TextFormattingMode="Display"
@@ -42,7 +42,7 @@
                             <GradientStop Color="#FF8844" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    <TextBlock Text="👁" FontSize="20"
+                    <TextBlock x:Name="txtNotifIcon" Text="👁" FontSize="20" Foreground="White"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
 

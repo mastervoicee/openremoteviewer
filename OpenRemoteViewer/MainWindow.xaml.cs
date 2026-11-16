@@ -38,7 +38,12 @@ public partial class MainWindow : Window
         UpdateUI();
         ApplyLanguage();
         _loading = false;
+
+        Closed += (_, _) => _updateCts.Cancel();
+        _ = new UpdatePrompt(btnUpdate, () => new Dictionary<string, string>(), () => { }, _updateCts.Token);
     }
+
+    private readonly CancellationTokenSource _updateCts = new();
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {

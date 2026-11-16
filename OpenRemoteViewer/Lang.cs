@@ -79,7 +79,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Screen temporarily unavailable (UAC prompt or locked) — waiting...",
             ["UpdateAvailable"] = "Update to v{0}",
             ["Updating"] = "Downloading update…",
-            ["UpdateFailed"] = "Update failed: {0}"
+            ["UpdateFailed"] = "Update failed: {0}",
+            ["CheckUpdates"] = "v{0} · Check for updates",
+            ["Checking"] = "Checking…",
+            ["UpToDate"] = "v{0} · Up to date",
+            ["UpdateToastTitle"] = "Update available: v{0}",
+            ["UpdateToastText"] = "Click the green Update button to install it",
+            ["UpdatedToast"] = "Updated to v{0}"
         },
 
         ["ru"] = new()
@@ -141,7 +147,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Экран временно недоступен (окно UAC или блокировка) — жду...",
             ["UpdateAvailable"] = "Обновить до v{0}",
             ["Updating"] = "Скачиваю обновление…",
-            ["UpdateFailed"] = "Не удалось обновить: {0}"
+            ["UpdateFailed"] = "Не удалось обновить: {0}",
+            ["CheckUpdates"] = "v{0} · Проверить обновления",
+            ["Checking"] = "Проверяю…",
+            ["UpToDate"] = "v{0} · Обновлений нет",
+            ["UpdateToastTitle"] = "Доступно обновление v{0}",
+            ["UpdateToastText"] = "Нажмите зелёную кнопку «Обновить», чтобы установить",
+            ["UpdatedToast"] = "Обновлено до v{0}"
         },
 
         ["de"] = new()
@@ -203,7 +215,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Bildschirm vorübergehend nicht verfügbar (UAC-Abfrage oder gesperrt) — warte...",
             ["UpdateAvailable"] = "Auf v{0} aktualisieren",
             ["Updating"] = "Update wird heruntergeladen…",
-            ["UpdateFailed"] = "Update fehlgeschlagen: {0}"
+            ["UpdateFailed"] = "Update fehlgeschlagen: {0}",
+            ["CheckUpdates"] = "v{0} · Nach Updates suchen",
+            ["Checking"] = "Suche…",
+            ["UpToDate"] = "v{0} · Aktuell",
+            ["UpdateToastTitle"] = "Update verfügbar: v{0}",
+            ["UpdateToastText"] = "Zum Installieren auf die grüne Update-Schaltfläche klicken",
+            ["UpdatedToast"] = "Aktualisiert auf v{0}"
         },
 
         ["es"] = new()
@@ -265,7 +283,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Pantalla temporalmente no disponible (aviso UAC o bloqueada) — esperando...",
             ["UpdateAvailable"] = "Actualizar a v{0}",
             ["Updating"] = "Descargando actualización…",
-            ["UpdateFailed"] = "Error de actualización: {0}"
+            ["UpdateFailed"] = "Error de actualización: {0}",
+            ["CheckUpdates"] = "v{0} · Buscar actualizaciones",
+            ["Checking"] = "Comprobando…",
+            ["UpToDate"] = "v{0} · Actualizado",
+            ["UpdateToastTitle"] = "Actualización disponible: v{0}",
+            ["UpdateToastText"] = "Pulse el botón verde Actualizar para instalarla",
+            ["UpdatedToast"] = "Actualizado a v{0}"
         },
 
         ["fr"] = new()
@@ -327,7 +351,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Écran temporairement indisponible (invite UAC ou session verrouillée) — en attente...",
             ["UpdateAvailable"] = "Mettre à jour vers v{0}",
             ["Updating"] = "Téléchargement de la mise à jour…",
-            ["UpdateFailed"] = "Échec de la mise à jour : {0}"
+            ["UpdateFailed"] = "Échec de la mise à jour : {0}",
+            ["CheckUpdates"] = "v{0} · Rechercher des mises à jour",
+            ["Checking"] = "Vérification…",
+            ["UpToDate"] = "v{0} · À jour",
+            ["UpdateToastTitle"] = "Mise à jour disponible : v{0}",
+            ["UpdateToastText"] = "Cliquez sur le bouton vert Mettre à jour pour l'installer",
+            ["UpdatedToast"] = "Mis à jour vers v{0}"
         },
 
         ["pl"] = new()
@@ -389,7 +419,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Ekran chwilowo niedostępny (okno UAC lub blokada) — czekam...",
             ["UpdateAvailable"] = "Aktualizuj do v{0}",
             ["Updating"] = "Pobieranie aktualizacji…",
-            ["UpdateFailed"] = "Aktualizacja nie powiodła się: {0}"
+            ["UpdateFailed"] = "Aktualizacja nie powiodła się: {0}",
+            ["CheckUpdates"] = "v{0} · Sprawdź aktualizacje",
+            ["Checking"] = "Sprawdzam…",
+            ["UpToDate"] = "v{0} · Aktualna",
+            ["UpdateToastTitle"] = "Dostępna aktualizacja: v{0}",
+            ["UpdateToastText"] = "Kliknij zielony przycisk Aktualizuj, aby zainstalować",
+            ["UpdatedToast"] = "Zaktualizowano do v{0}"
         },
 
         ["cs"] = new()
@@ -451,7 +487,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Obrazovka dočasně nedostupná (výzva UAC nebo uzamčení) — čekám...",
             ["UpdateAvailable"] = "Aktualizovat na v{0}",
             ["Updating"] = "Stahuji aktualizaci…",
-            ["UpdateFailed"] = "Aktualizace selhala: {0}"
+            ["UpdateFailed"] = "Aktualizace selhala: {0}",
+            ["CheckUpdates"] = "v{0} · Zkontrolovat aktualizace",
+            ["Checking"] = "Kontroluji…",
+            ["UpToDate"] = "v{0} · Aktuální",
+            ["UpdateToastTitle"] = "Dostupná aktualizace: v{0}",
+            ["UpdateToastText"] = "Klikněte na zelené tlačítko Aktualizovat",
+            ["UpdatedToast"] = "Aktualizováno na v{0}"
         },
 
         ["lt"] = new()
@@ -513,7 +555,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Ekranas laikinai nepasiekiamas (UAC langas arba užrakinta) — laukiu...",
             ["UpdateAvailable"] = "Atnaujinti iki v{0}",
             ["Updating"] = "Atsisiunčiamas atnaujinimas…",
-            ["UpdateFailed"] = "Atnaujinti nepavyko: {0}"
+            ["UpdateFailed"] = "Atnaujinti nepavyko: {0}",
+            ["CheckUpdates"] = "v{0} · Tikrinti atnaujinimus",
+            ["Checking"] = "Tikrinama…",
+            ["UpToDate"] = "v{0} · Naujausia versija",
+            ["UpdateToastTitle"] = "Yra atnaujinimas: v{0}",
+            ["UpdateToastText"] = "Spustelėkite žalią mygtuką Atnaujinti",
+            ["UpdatedToast"] = "Atnaujinta iki v{0}"
         },
 
         ["lv"] = new()
@@ -575,7 +623,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Ekrāns īslaicīgi nav pieejams (UAC logs vai bloķēts) — gaidu...",
             ["UpdateAvailable"] = "Atjaunināt uz v{0}",
             ["Updating"] = "Lejupielādē atjauninājumu…",
-            ["UpdateFailed"] = "Atjaunināšana neizdevās: {0}"
+            ["UpdateFailed"] = "Atjaunināšana neizdevās: {0}",
+            ["CheckUpdates"] = "v{0} · Pārbaudīt atjauninājumus",
+            ["Checking"] = "Pārbauda…",
+            ["UpToDate"] = "v{0} · Jaunākā versija",
+            ["UpdateToastTitle"] = "Pieejams atjauninājums: v{0}",
+            ["UpdateToastText"] = "Nospiediet zaļo pogu Atjaunināt",
+            ["UpdatedToast"] = "Atjaunināts uz v{0}"
         },
 
         ["et"] = new()
@@ -637,7 +691,13 @@ public static class Lang
             ["ScreenUnavailable"] = "Ekraan ajutiselt kättesaamatu (UAC aken või lukustatud) — ootan...",
             ["UpdateAvailable"] = "Uuenda versioonile v{0}",
             ["Updating"] = "Uuenduse allalaadimine…",
-            ["UpdateFailed"] = "Uuendamine ebaõnnestus: {0}"
+            ["UpdateFailed"] = "Uuendamine ebaõnnestus: {0}",
+            ["CheckUpdates"] = "v{0} · Otsi uuendusi",
+            ["Checking"] = "Kontrollin…",
+            ["UpToDate"] = "v{0} · Ajakohane",
+            ["UpdateToastTitle"] = "Uuendus saadaval: v{0}",
+            ["UpdateToastText"] = "Klõpsake rohelist nuppu Uuenda",
+            ["UpdatedToast"] = "Uuendatud versioonile v{0}"
         }
     };
 
@@ -710,4 +770,10 @@ public static class Lang
     public static string UpdateAvailable => Get("UpdateAvailable");
     public static string Updating => Get("Updating");
     public static string UpdateFailed => Get("UpdateFailed");
+    public static string CheckUpdates => Get("CheckUpdates");
+    public static string Checking => Get("Checking");
+    public static string UpToDate => Get("UpToDate");
+    public static string UpdateToastTitle => Get("UpdateToastTitle");
+    public static string UpdateToastText => Get("UpdateToastText");
+    public static string UpdatedToast => Get("UpdatedToast");
 }
