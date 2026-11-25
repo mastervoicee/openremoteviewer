@@ -8,13 +8,29 @@ namespace OpenRemoteViewer;
 
 public static class ScreenCapture
 {
+    /// <summary>
+    /// Мониторы в физических пикселях, каждый раз заново у Windows.
+    /// Не Screen.AllScreens: тот кеширует список и после отключения/подключения
+    /// мониторов (ноутбук унесли от док-станции) продолжает отдавать старую раскладку.
+    /// </summary>
     public static List<Rectangle> GetMonitors()
     {
-        return WinForms.Screen.AllScreens
-            .OrderBy(s => s.Bounds.X)
-            .ThenBy(s => s.Bounds.Y)
-            .Select(s => s.Bounds)
-            .ToList();
+        var list = new List<Rectangle>();
+        EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (IntPtr hMon, IntPtr hdc, ref RECT r, IntPtr data) =>
+        {
+            var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+            if (GetMonitorInfo(hMon, ref mi))
+            {
+                var rc = mi.rcMonitor;
+                list.Add(new Rectangle(rc.Left, rc.Top, rc.Right - rc.Left, rc.Bottom - rc.Top));
+            }
+            return true;
+        }, IntPtr.Zero);
+
+        if (list.Count == 0)
+            list.AddRange(WinForms.Screen.AllScreens.Select(s => s.Bounds));
+
+        return list.OrderBy(r => r.X).ThenBy(r => r.Y).ToList();
     }
 
     public static int GetCursorMonitorIndex()
@@ -70,6 +86,26 @@ public static class ScreenCapture
 
     [StructLayout(LayoutKind.Sequential)]
     private struct POINT { public int X, Y; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT { public int Left, Top, Right, Bottom; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    private delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr clip, MonitorEnumProc callback, IntPtr data);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO info);
 
     [DllImport("user32.dll")]
     private static extern bool GetCursorPos(out POINT lpPoint);

@@ -21,6 +21,8 @@ public partial class ClientWindow : Window
     private CancellationTokenSource? _sessionCts;
     private volatile int _currentMonitor;
     private volatile int _lastCursorMonitor = -1;
+    private DateTime _lastMonitorCheck = DateTime.MinValue;
+    private volatile string _monitorSignature = "";
     private WinForms.NotifyIcon? _trayIcon;
     private AdminNotificationWindow? _notification;
     private bool _isConnected;
@@ -350,9 +352,33 @@ public partial class ClientWindow : Window
         _overlay.SetMonitor(mon);
     }
 
-    private async Task SendMonitorListAsync()
+    /// <summary>
+    /// Мониторы отключили/подключили или сменили разрешение/масштаб во время сеанса
+    /// (ноутбук унесли со стола) — шлём админу новый список и переставляем оверлей,
+    /// без перезапуска программы и компьютера.
+    /// </summary>
+    private async Task RefreshMonitorsIfChangedAsync(CancellationToken ct)
     {
+        _lastMonitorCheck = DateTime.UtcNow;
         var monitors = ScreenCapture.GetMonitors();
+        string signature = string.Join(";", monitors.Select(m => $"{m.X},{m.Y},{m.Width},{m.Height}"));
+        if (signature == _monitorSignature) return;
+
+        _monitorSignature = signature;
+        if (_currentMonitor >= monitors.Count) _currentMonitor = 0;
+        _lastCursorMonitor = -1;
+
+        var mon = monitors[_currentMonitor];
+        Dispatcher.Invoke(() => _overlay?.SetMonitor(mon));
+        await SendMonitorListAsync(monitors, ct);
+    }
+
+    private Task SendMonitorListAsync() =>
+        SendMonitorListAsync(ScreenCapture.GetMonitors(), _sessionCts?.Token ?? _cts.Token);
+
+    private async Task SendMonitorListAsync(List<System.Drawing.Rectangle> monitors, CancellationToken ct)
+    {
+        _monitorSignature = string.Join(";", monitors.Select(m => $"{m.X},{m.Y},{m.Width},{m.Height}"));
         using var ms = new MemoryStream();
         using var bw = new BinaryWriter(ms);
         bw.Write(monitors.Count);
@@ -363,7 +389,7 @@ public partial class ClientWindow : Window
             bw.Write(m.Width);
             bw.Write(m.Height);
         }
-        await _connection!.SendMessageAsync(MessageType.MonitorList, ms.ToArray(), _sessionCts?.Token ?? _cts.Token);
+        await _connection!.SendMessageAsync(MessageType.MonitorList, ms.ToArray(), ct);
     }
 
     private async Task StreamScreenAsync(CancellationToken ct)
@@ -375,6 +401,9 @@ public partial class ClientWindow : Window
         {
             try
             {
+                if ((DateTime.UtcNow - _lastMonitorCheck).TotalSeconds >= 1)
+                    await RefreshMonitorsIfChangedAsync(ct);
+
                 int cursorMon = ScreenCapture.GetCursorMonitorIndex();
                 if (cursorMon != _lastCursorMonitor)
                 {

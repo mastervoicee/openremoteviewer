@@ -71,12 +71,32 @@ public class ClickOverlay : Window
     {
         Dispatcher.Invoke(() =>
         {
-            Left = bounds.X / _dpiScale;
-            Top = bounds.Y / _dpiScale;
-            Width = bounds.Width / _dpiScale;
-            Height = bounds.Height / _dpiScale;
             _painter.Clear();
+            var hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero)
+            {
+                Left = bounds.X / _dpiScale;
+                Top = bounds.Y / _dpiScale;
+                Width = bounds.Width / _dpiScale;
+                Height = bounds.Height / _dpiScale;
+                return;
+            }
+
+            // Ставим окно в физических пикселях: у мониторов может быть разный масштаб,
+            // а пересчёт через DIP берёт масштаб того экрана, где окно было до переезда.
+            // Второй вызов — после того как WPF принял масштаб нового монитора и мог подвинуть размер.
+            for (int i = 0; i < 2; i++)
+            {
+                SetWindowPos(hwnd, HWND_TOPMOST, bounds.X, bounds.Y, bounds.Width, bounds.Height, SWP_NOACTIVATE);
+                _dpiScale = VisualTreeHelper.GetDpi(this).DpiScaleX;
+            }
         });
+    }
+
+    protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
+    {
+        base.OnDpiChanged(oldDpi, newDpi);
+        _dpiScale = newDpi.DpiScaleX;
     }
 
     /// <summary>
